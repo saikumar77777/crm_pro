@@ -1,216 +1,174 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { MessageSquare, Sparkles, Copy, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Shield, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import ObjectionHandlerOrchestrator from '@/api/objectionHandlerAgents';
 
-const ObjectionHandler: React.FC = () => {
+// Helper function to convert markdown to HTML (simplified version)
+function markdownToHTML(markdown: string): string {
+  if (!markdown) return '';
+  
+  // Basic markdown conversion
+  const processed = markdown
+    // Bold
+    .replace(/\*\*(.*?)\*\*/gim, '<strong class="text-white font-bold">$1</strong>')
+    // Italic
+    .replace(/\*(.*?)\*/gim, '<em class="text-blue-200">$1</em>')
+    // Line breaks
+    .replace(/\n/gim, '<br>');
+
+  return `<p class="text-white">${processed}</p>`;
+}
+
+interface ObjectionHandlerProps {
+  dealId: string;
+  dealName: string;
+}
+
+const ObjectionHandler: React.FC<ObjectionHandlerProps> = ({ dealId, dealName }) => {
   const [objection, setObjection] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [responses, setResponses] = useState<string[]>([]);
-  const [feedbackGiven, setFeedbackGiven] = useState<{[key: number]: 'up' | 'down' | null}>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [response, setResponse] = useState<any>(null);
   const { toast } = useToast();
 
-  const handleGenerateResponses = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
     if (!objection.trim()) {
       toast({
         title: "Error",
-        description: "Please enter a customer objection first",
+        description: "Please enter a customer objection",
         variant: "destructive"
       });
       return;
     }
-
-    setIsGenerating(true);
+    
+    setIsLoading(true);
+    setResponse(null);
     
     try {
-      // In a real implementation, this would be an API call to an AI service
-      // For now, we'll simulate AI-generated responses
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      toast({
+        title: "Processing",
+        description: "AI agents are analyzing the objection...",
+      });
       
-      // Generate responses based on the objection type
-      const objectionLower = objection.toLowerCase();
-      let generatedResponses: string[] = [];
+      // Call the Objection Handler Orchestrator
+      const result = await ObjectionHandlerOrchestrator(objection, dealId);
+      console.log("Objection handler result:", result);
       
-      if (objectionLower.includes('price') || objectionLower.includes('expensive') || objectionLower.includes('cost')) {
-        generatedResponses = [
-          "I understand your concern about the investment. Many of our customers initially felt the same way, but found that the ROI within the first 6 months more than justified the cost. Would you like me to share some specific ROI examples from companies similar to yours?",
-          
-          "You're right to be concerned about costs. Rather than looking at the upfront price, let's discuss the total value over time. Our solution reduces operational costs by an average of 23%, which typically covers the investment within the first year. Would it be helpful to see a customized cost-benefit analysis for your specific situation?",
-          
-          "I appreciate you bringing up pricing. We offer flexible payment options that can align with your budget cycle, including quarterly payments and annual subscriptions with discounts. Which approach would work better for your financial planning?"
-        ];
-      } else if (objectionLower.includes('competitor') || objectionLower.includes('alternative')) {
-        generatedResponses = [
-          "I'm glad you're exploring all options. While [Competitor] offers some similar features, our solution differentiates in three key areas: better integration capabilities, more comprehensive analytics, and dedicated customer success managers for ongoing support. Which of these areas is most important to your team?",
-          
-          "That's a good point about [Competitor]. Many of our current customers actually switched from them due to limitations they encountered as their needs grew. The main differences they cite are our platform's scalability, ease of customization, and our 24/7 support team. Would you like me to connect you with a customer who made this switch?",
-          
-          "I respect that you're considering [Competitor]. They have a solid product. Where we typically stand out is in implementation time (averaging 30% faster) and user adoption rates (our customers report 40% higher adoption). Would these factors impact your decision-making process?"
-        ];
-      } else if (objectionLower.includes('time') || objectionLower.includes('busy') || objectionLower.includes('later')) {
-        generatedResponses = [
-          "I completely understand how valuable your time is. Many of our customers were concerned about implementation time as well. That's why we've developed a streamlined onboarding process that requires minimal time from your team. Most clients are fully operational within just 2-3 weeks with only 4-6 hours of their team's involvement.",
-          
-          "I appreciate you're juggling multiple priorities right now. What if we scheduled a brief 15-minute call just to identify your most pressing challenges? This would help us prepare a focused proposal that addresses only what's most important to you at this moment.",
-          
-          "Timing is crucial, and I respect your current commitments. Would it be helpful if I shared a case study of how we helped a similarly time-constrained organization implement our solution with minimal disruption? They were able to maintain full operations while transitioning to our platform."
-        ];
-      } else if (objectionLower.includes('need') || objectionLower.includes('necessary') || objectionLower.includes('required')) {
-        generatedResponses = [
-          "That's a fair point. Not every solution is right for every business. Based on what you've shared about [mention specific challenge they've discussed], our platform could help you improve efficiency by approximately 30%. Would that level of improvement be significant enough to warrant further discussion?",
-          
-          "I appreciate your candor. Many of our most successful customers initially questioned whether they needed our solution. What convinced them was seeing the hidden costs and inefficiencies in their current processes. Would it be valuable to conduct a quick assessment to identify potential areas where you might be leaving money on the table?",
-          
-          "You're right to question whether this is necessary for your business. Rather than assuming it is, let's look at your specific goals for this year. What metrics are you most focused on improving? This will help us determine if there's actually a good fit here."
-        ];
-      } else {
-        // Generic responses for other objection types
-        generatedResponses = [
-          "I appreciate you sharing that concern. Many of our customers had similar thoughts before they understood how our solution specifically addresses this challenge. Could you tell me more about what's driving this concern so I can provide a more tailored response?",
-          
-          "That's a valid point. Based on what you've shared, I think there's a specific aspect of our solution that might address this concern directly. Would it be helpful if I focused on how we've helped other customers overcome this exact issue?",
-          
-          "Thank you for being transparent about your concerns. This gives us an opportunity to address them directly. In similar situations with other clients, we've found that [specific approach] has been effective. Would that approach be relevant to your situation as well?"
-        ];
-      }
+      setResponse(result);
       
-      setResponses(generatedResponses);
+      toast({
+        title: result.wasConvinced ? "Success" : "Partial Success",
+        description: result.wasConvinced 
+          ? "Generated a convincing response!" 
+          : `Generated best possible response after ${result.attempts} attempts`,
+      });
     } catch (error) {
-      console.error('Error generating responses:', error);
+      console.error("Error handling objection:", error);
       toast({
         title: "Error",
-        description: "Failed to generate responses",
+        description: "Failed to process objection. Please try again.",
         variant: "destructive"
       });
     } finally {
-      setIsGenerating(false);
+      setIsLoading(false);
     }
-  };
-
-  const handleCopyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast({
-      title: "Copied!",
-      description: "Response copied to clipboard"
-    });
-  };
-
-  const handleFeedback = (index: number, type: 'up' | 'down') => {
-    setFeedbackGiven(prev => ({
-      ...prev,
-      [index]: type
-    }));
-    
-    toast({
-      title: type === 'up' ? "Great!" : "Thanks for the feedback",
-      description: type === 'up' 
-        ? "We'll prioritize similar responses in the future" 
-        : "We'll improve our suggestions based on your feedback"
-    });
   };
 
   return (
     <Card className="bg-gradient-to-br from-crm-secondary to-crm-tertiary border-crm-tertiary overflow-hidden">
       <CardHeader className="pb-3 border-b border-crm-tertiary">
         <CardTitle className="flex items-center text-lg font-medium text-white">
-          <MessageSquare className="w-5 h-5 mr-2 text-orange-400" />
+          <Shield className="w-5 h-5 mr-2 text-crm-electric" />
           Objection Handler AI
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-6">
-        <div className="space-y-6">
-          <div>
-            <label htmlFor="objection" className="block text-sm font-medium text-white mb-2">
-              Paste customer objection
-            </label>
-            <Textarea
-              id="objection"
-              placeholder="e.g., 'Your product is too expensive' or 'We're already using a competitor'"
-              value={objection}
-              onChange={(e) => setObjection(e.target.value)}
-              className="bg-crm-tertiary border-crm-tertiary text-white placeholder:text-gray-400 min-h-[100px]"
-            />
-          </div>
-          
-          <div className="flex justify-center">
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="objection" className="block text-sm font-medium text-crm-text-secondary mb-1">
+                Customer Objection
+              </label>
+              <Textarea
+                id="objection"
+                placeholder="Enter the customer's objection here..."
+                className="w-full bg-crm-tertiary border-crm-tertiary text-white"
+                value={objection}
+                onChange={(e) => setObjection(e.target.value)}
+                disabled={isLoading}
+              />
+            </div>
+            
             <Button
-              onClick={handleGenerateResponses}
-              disabled={isGenerating || !objection.trim()}
-              className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white"
+              type="submit"
+              disabled={isLoading || !objection.trim()}
+              className="w-full bg-crm-electric hover:bg-crm-electric/90 text-white"
             >
-              {isGenerating ? (
+              {isLoading ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Generating Responses...
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Processing...
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Generate Convincing Responses
+                  <Shield className="w-4 h-4 mr-2" />
+                  Generate Response
                 </>
               )}
             </Button>
           </div>
-          
-          {responses.length > 0 && (
-            <div className="space-y-6 mt-4">
-              <h3 className="text-white font-medium">Suggested Responses:</h3>
-              <div className="space-y-4">
-                {responses.map((response, index) => (
-                  <div key={index} className="bg-crm-tertiary rounded-lg p-4 relative group">
-                    <p className="text-white mb-4">{response}</p>
-                    <div className="flex justify-between items-center">
-                      <div className="space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleFeedback(index, 'up')}
-                          disabled={feedbackGiven[index] !== undefined}
-                          className={`border-crm-tertiary hover:bg-crm-secondary ${
-                            feedbackGiven[index] === 'up' ? 'text-green-400' : 'text-white'
-                          }`}
-                        >
-                          <ThumbsUp className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleFeedback(index, 'down')}
-                          disabled={feedbackGiven[index] !== undefined}
-                          className={`border-crm-tertiary hover:bg-crm-secondary ${
-                            feedbackGiven[index] === 'down' ? 'text-red-400' : 'text-white'
-                          }`}
-                        >
-                          <ThumbsDown className="w-4 h-4" />
-                        </Button>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleCopyToClipboard(response)}
-                        className="border-crm-tertiary text-white hover:bg-crm-secondary"
-                      >
-                        <Copy className="w-4 h-4 mr-2" />
-                        Copy
-                      </Button>
-                    </div>
-                    {feedbackGiven[index] && (
-                      <div className="absolute top-2 right-2">
-                        <span className={`text-xs ${
-                          feedbackGiven[index] === 'up' ? 'text-green-400' : 'text-red-400'
-                        }`}>
-                          {feedbackGiven[index] === 'up' ? 'Helpful' : 'Not helpful'}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                ))}
+        </form>
+        
+        {response && (
+          <div className="mt-6 space-y-4">
+            <div className="bg-crm-tertiary p-4 rounded-lg border border-crm-tertiary/50">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-white font-medium">Recommended Response</h3>
+                <div className="flex items-center">
+                  {response.wasConvinced ? (
+                    <span className="flex items-center text-green-400 text-sm">
+                      <CheckCircle2 className="w-4 h-4 mr-1" />
+                      Convincing
+                    </span>
+                  ) : (
+                    <span className="flex items-center text-amber-400 text-sm">
+                      <XCircle className="w-4 h-4 mr-1" />
+                      Partially Convincing
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="prose prose-invert max-w-none">
+                <div dangerouslySetInnerHTML={{ __html: markdownToHTML(response.finalResponse) }} />
               </div>
             </div>
-          )}
-        </div>
+            
+            <div className="bg-crm-tertiary/50 p-4 rounded-lg border border-crm-tertiary/30">
+              <h4 className="text-sm font-medium text-crm-text-secondary mb-2">Process Details</h4>
+              <div className="text-sm text-crm-text-secondary">
+                <p>Attempts: {response.attempts} of 3</p>
+                {response.rationale && (
+                  <p className="mt-2">
+                    <span className="text-crm-text-white">Last feedback:</span> {response.rationale}
+                  </p>
+                )}
+              </div>
+            </div>
+            
+            <Button
+              onClick={() => setResponse(null)}
+              variant="outline"
+              className="w-full border-crm-tertiary text-crm-text-secondary hover:bg-crm-tertiary/50 hover:text-white"
+            >
+              Reset
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

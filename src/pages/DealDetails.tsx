@@ -131,7 +131,7 @@ const DealDetails = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-4">
-          <ObjectionHandler />
+          <ObjectionHandler dealId={deal.id} dealName={deal.name} />
         </CardContent>
       </Card>
     );

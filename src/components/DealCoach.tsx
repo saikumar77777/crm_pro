@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Lightbulb, Target, MessageSquare, Users, CheckCircle, Loader2, DollarSign } from 'lucide-react';
+import { Lightbulb, Loader2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import MainDealCoachAgent from '@/api/dealCoachAgents';
 
@@ -61,7 +60,6 @@ interface DealCoachProps {
 
 const DealCoach: React.FC<DealCoachProps> = ({ dealId, dealName, dealStage }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('assessment');
   const [coachingData, setCoachingData] = useState<any>(null);
   const { toast } = useToast();
 
@@ -82,11 +80,7 @@ const DealCoach: React.FC<DealCoachProps> = ({ dealId, dealName, dealStage }) =>
       
       // Transform the agent response into UI-friendly format
       const coachingData = {
-        combinedAdvice: agentResponse.combinedAdvice,
-        stageAdvice: agentResponse.stageAdvice,
-        objectionAdvice: agentResponse.objectionAdvice,
-        pricingAdvice: agentResponse.pricingAdvice,
-        contactAdvice: agentResponse.contactAdvice
+        combinedAdvice: agentResponse.combinedAdvice
       };
       
       setCoachingData(coachingData);
@@ -144,100 +138,30 @@ const DealCoach: React.FC<DealCoachProps> = ({ dealId, dealName, dealStage }) =>
           </div>
         ) : (
           <div>
-            <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="bg-crm-tertiary border border-crm-tertiary/50 mb-6 w-full grid grid-cols-5 p-1">
-                <TabsTrigger 
-                  value="assessment" 
-                  className="data-[state=active]:bg-crm-electric data-[state=active]:text-white text-gray-300 font-medium"
-                >
-                  <Target className="w-4 h-4 mr-2" />
-                  Assessment
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="strategy" 
-                  className="data-[state=active]:bg-crm-electric data-[state=active]:text-white text-gray-300 font-medium"
-                >
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  Strategy
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="objections" 
-                  className="data-[state=active]:bg-crm-electric data-[state=active]:text-white text-gray-300 font-medium"
-                >
-                  <MessageSquare className="w-4 h-4 mr-2" />
-                  Objections
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="pricing" 
-                  className="data-[state=active]:bg-crm-electric data-[state=active]:text-white text-gray-300 font-medium"
-                >
-                  <DollarSign className="w-4 h-4 mr-2" />
-                  Pricing
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="relationship" 
-                  className="data-[state=active]:bg-crm-electric data-[state=active]:text-white text-gray-300 font-medium"
-                >
-                  <Users className="w-4 h-4 mr-2" />
-                  Contacts
-                </TabsTrigger>
-              </TabsList>
-              
-              {/* Combined Assessment Tab */}
-              <TabsContent value="assessment" className="mt-0">
-                <div className="prose prose-invert max-w-none bg-crm-secondary p-6 rounded-lg border border-crm-tertiary shadow-lg">
-                  <div dangerouslySetInnerHTML={{ __html: markdownToHTML(coachingData.combinedAdvice) }} />
-                </div>
-                <div className="mt-6 pt-4 border-t border-crm-tertiary">
-                  <Button
-                    onClick={generateCoaching}
-                    disabled={isLoading}
-                    variant="outline"
-                    className="border-crm-electric text-crm-electric hover:bg-crm-electric/10"
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Regenerating...
-                      </>
-                    ) : (
-                      <>
-                        <Lightbulb className="w-4 h-4 mr-2" />
-                        Regenerate Coaching
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </TabsContent>
-              
-              {/* Stage Strategy Tab */}
-              <TabsContent value="strategy" className="mt-0">
-                <div className="prose prose-invert max-w-none bg-crm-secondary p-6 rounded-lg border border-crm-tertiary shadow-lg">
-                  <div dangerouslySetInnerHTML={{ __html: markdownToHTML(coachingData.stageAdvice) }} />
-                </div>
-              </TabsContent>
-              
-              {/* Objections Tab */}
-              <TabsContent value="objections" className="mt-0">
-                <div className="prose prose-invert max-w-none bg-crm-secondary p-6 rounded-lg border border-crm-tertiary shadow-lg">
-                  <div dangerouslySetInnerHTML={{ __html: markdownToHTML(coachingData.objectionAdvice) }} />
-                </div>
-              </TabsContent>
-              
-              {/* Pricing Tab */}
-              <TabsContent value="pricing" className="mt-0">
-                <div className="prose prose-invert max-w-none bg-crm-secondary p-6 rounded-lg border border-crm-tertiary shadow-lg">
-                  <div dangerouslySetInnerHTML={{ __html: markdownToHTML(coachingData.pricingAdvice) }} />
-                </div>
-              </TabsContent>
-              
-              {/* Contact Approach Tab */}
-              <TabsContent value="relationship" className="mt-0">
-                <div className="prose prose-invert max-w-none bg-crm-secondary p-6 rounded-lg border border-crm-tertiary shadow-lg">
-                  <div dangerouslySetInnerHTML={{ __html: markdownToHTML(coachingData.contactAdvice) }} />
-                </div>
-              </TabsContent>
-            </Tabs>
+            {/* Display only the synthesis agent output */}
+            <div className="prose prose-invert max-w-none bg-crm-secondary p-6 rounded-lg border border-crm-tertiary shadow-lg">
+              <div dangerouslySetInnerHTML={{ __html: markdownToHTML(coachingData.combinedAdvice) }} />
+            </div>
+            <div className="mt-6 pt-4 border-t border-crm-tertiary">
+              <Button
+                onClick={generateCoaching}
+                disabled={isLoading}
+                variant="outline"
+                className="border-crm-electric text-crm-electric hover:bg-crm-electric/10"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Regenerating...
+                  </>
+                ) : (
+                  <>
+                    <Lightbulb className="w-4 h-4 mr-2" />
+                    Regenerate Coaching
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         )}
       </CardContent>
