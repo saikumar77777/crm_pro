@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, DollarSign, User, Building, Target, Clock, FileText, Plus, Edit3, Lightbulb, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Calendar, DollarSign, User, Building, Target, Clock, FileText, Plus, Edit3, Lightbulb, MessageSquare, Trophy, FileQuestion } from 'lucide-react';
 import CRMSidebar from '../components/CRMSidebar';
 import { useDeals } from '@/hooks/useDeals';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import ObjectionHandler from '@/components/ObjectionHandler';
 import DealCoach from '@/components/DealCoach';
+import WinLossExplainer from '@/components/WinLossExplainer';
 
 const DealDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -132,6 +133,39 @@ const DealDetails = () => {
         </CardHeader>
         <CardContent className="pt-4">
           <ObjectionHandler dealId={deal.id} dealName={deal.name} />
+        </CardContent>
+      </Card>
+    );
+  };
+
+  const renderWinLossExplainer = () => {
+    if (deal.stage !== 'closed-won' && deal.stage !== 'closed-lost') {
+      return null;
+    }
+    
+    return (
+      <Card className="bg-gradient-to-br from-crm-secondary to-crm-tertiary border-crm-tertiary mb-8 overflow-hidden">
+        <CardHeader className="pb-3 border-b border-crm-tertiary">
+          <CardTitle className="flex items-center text-lg font-medium text-white">
+            {deal.stage === 'closed-won' ? (
+              <>
+                <Trophy className="w-5 h-5 mr-2 text-green-400" />
+                Win Analysis
+              </>
+            ) : (
+              <>
+                <FileQuestion className="w-5 h-5 mr-2 text-amber-400" />
+                Loss Analysis
+              </>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <WinLossExplainer 
+            dealId={deal.id} 
+            dealName={deal.name} 
+            dealStage={deal.stage} 
+          />
         </CardContent>
       </Card>
     );
@@ -259,8 +293,11 @@ const DealDetails = () => {
           />
         </div>
 
-        {/* Objection Handler */}
-        {renderObjectionHandler()}
+        {/* Objection Handler - show for active deals */}
+        {!['closed-won', 'closed-lost'].includes(deal.stage) && renderObjectionHandler()}
+
+        {/* Win-Loss Explainer - only show for closed deals */}
+        {['closed-won', 'closed-lost'].includes(deal.stage) && renderWinLossExplainer()}
 
         {/* Notes Section - Enhanced */}
         <Card className="bg-gradient-to-br from-crm-secondary to-crm-tertiary border-crm-tertiary shadow-xl">

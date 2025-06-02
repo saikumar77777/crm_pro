@@ -4,6 +4,7 @@ import { MessageSquare, Mail, Phone, Video, Calendar } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ObjectionHandler from '@/components/ObjectionHandler';
+import CommunicationHub from '@/components/CommunicationHub';
 
 const Communications = () => {
   return (
@@ -17,8 +18,12 @@ const Communications = () => {
           <p className="text-crm-text-secondary">Manage customer interactions and communications</p>
         </div>
         
-        <Tabs defaultValue="objection-handler" className="w-full">
+        <Tabs defaultValue="communication-hub">
           <TabsList className="bg-crm-secondary border-crm-tertiary mb-8">
+            <TabsTrigger value="communication-hub" className="data-[state=active]:bg-crm-tertiary data-[state=active]:text-white text-crm-text-secondary">
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Communication Hub
+            </TabsTrigger>
             <TabsTrigger value="objection-handler" className="data-[state=active]:bg-crm-tertiary data-[state=active]:text-white text-crm-text-secondary">
               <MessageSquare className="w-4 h-4 mr-2" />
               Objection Handler
@@ -37,10 +42,21 @@ const Communications = () => {
             </TabsTrigger>
           </TabsList>
           
+          <TabsContent value="communication-hub" className="mt-0">
+            <Card className="bg-gradient-to-br from-crm-secondary to-crm-tertiary border-crm-tertiary">
+              <CardContent className="pt-6">
+                <CommunicationHub />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
           <TabsContent value="objection-handler" className="mt-0">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2">
-                <ObjectionHandler />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="md:col-span-2">
+                <ObjectionHandler 
+                  dealId="demo-deal-id" 
+                  dealName="Demo Deal" 
+                />
               </div>
               
               <div className="space-y-8">

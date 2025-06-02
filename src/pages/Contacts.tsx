@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import CRMSidebar from '../components/CRMSidebar';
-import { Search, Plus, User, Bell, FileText, Circle, Brain } from 'lucide-react';
+import { Search, Plus, User, Bell, FileText, Circle, Brain, MessageSquare } from 'lucide-react';
 import { useContacts } from '@/hooks/useContacts';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2 } from 'lucide-react';
 import CustomerPersonaBuilder from '@/components/CustomerPersonaBuilder';
+import ContactDetails from '@/components/ContactDetails';
 
 const Contacts = () => {
   const { contacts, loading, createContact } = useContacts();
@@ -17,6 +18,7 @@ const Contacts = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState<any>(null);
   const [isPersonaDialogOpen, setIsPersonaDialogOpen] = useState(false);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [newContact, setNewContact] = useState({
     first_name: '',
     last_name: '',
@@ -110,13 +112,19 @@ const Contacts = () => {
     setIsPersonaDialogOpen(true);
   };
 
+  const handleOpenContactDetails = (contact: any) => {
+    setSelectedContact(contact);
+    setIsDetailsDialogOpen(true);
+  };
+
   const renderContactCard = (contact: any) => {
     const statusConfig = getStatusConfig(contact.status);
     
     return (
       <div 
         key={contact.id}
-        className={`bg-crm-secondary border border-crm-tertiary rounded-lg overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-crm-electric/50 ${statusConfig.leftBorder} border-l-4`}
+        className={`bg-crm-secondary border border-crm-tertiary rounded-lg overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-crm-electric/50 ${statusConfig.leftBorder} border-l-4 cursor-pointer`}
+        onClick={() => handleOpenContactDetails(contact)}
       >
         <div className="p-5">
           <div className="flex justify-between items-start mb-3">
@@ -160,15 +168,30 @@ const Contacts = () => {
             <span className="text-xs text-crm-text-secondary">
               Last contact: {formatLastContact(contact.created_at)}
             </span>
-            <Button 
-              size="sm" 
-              variant="outline" 
-              className="border-crm-tertiary text-purple-400 hover:bg-crm-tertiary"
-              onClick={() => handleOpenPersonaBuilder(contact)}
-            >
-              <Brain className="w-4 h-4 mr-1" />
-              AI Persona
-            </Button>
+            <div className="flex space-x-2">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="border-crm-tertiary text-crm-electric hover:bg-crm-tertiary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleOpenContactDetails(contact);
+                }}
+              >
+                <MessageSquare className="w-4 h-4" />
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="border-crm-tertiary text-purple-400 hover:bg-crm-tertiary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleOpenPersonaBuilder(contact);
+                }}
+              >
+                <Brain className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -369,6 +392,18 @@ const Contacts = () => {
               </DialogTitle>
             </DialogHeader>
             {selectedContact && <CustomerPersonaBuilder contact={selectedContact} />}
+          </DialogContent>
+        </Dialog>
+        
+        {/* Contact Details Dialog */}
+        <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
+          <DialogContent className="bg-crm-secondary border-crm-tertiary max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-white">
+                {selectedContact && `${selectedContact.first_name} ${selectedContact.last_name}`}
+              </DialogTitle>
+            </DialogHeader>
+            {selectedContact && <ContactDetails contact={selectedContact} />}
           </DialogContent>
         </Dialog>
       </div>

@@ -45,7 +45,7 @@ const ObjectionHandler: React.FC<ObjectionHandlerProps> = ({ dealId, dealName })
       });
       return;
     }
-    
+
     setIsLoading(true);
     setResponse(null);
     
@@ -90,20 +90,20 @@ const ObjectionHandler: React.FC<ObjectionHandlerProps> = ({ dealId, dealName })
       <CardContent className="pt-6">
         <form onSubmit={handleSubmit}>
           <div className="space-y-4">
-            <div>
+          <div>
               <label htmlFor="objection" className="block text-sm font-medium text-crm-text-secondary mb-1">
                 Customer Objection
-              </label>
-              <Textarea
-                id="objection"
+            </label>
+            <Textarea
+              id="objection"
                 placeholder="Enter the customer's objection here..."
                 className="w-full bg-crm-tertiary border-crm-tertiary text-white"
-                value={objection}
-                onChange={(e) => setObjection(e.target.value)}
+              value={objection}
+              onChange={(e) => setObjection(e.target.value)}
                 disabled={isLoading}
-              />
-            </div>
-            
+            />
+          </div>
+          
             <Button
               type="submit"
               disabled={isLoading || !objection.trim()}
@@ -139,9 +139,9 @@ const ObjectionHandler: React.FC<ObjectionHandlerProps> = ({ dealId, dealName })
                     <span className="flex items-center text-amber-400 text-sm">
                       <XCircle className="w-4 h-4 mr-1" />
                       Partially Convincing
-                    </span>
-                  )}
-                </div>
+                        </span>
+                    )}
+                  </div>
               </div>
               <div className="prose prose-invert max-w-none">
                 <div dangerouslySetInnerHTML={{ __html: markdownToHTML(response.finalResponse) }} />
@@ -156,8 +156,8 @@ const ObjectionHandler: React.FC<ObjectionHandlerProps> = ({ dealId, dealName })
                   <p className="mt-2">
                     <span className="text-crm-text-white">Last feedback:</span> {response.rationale}
                   </p>
-                )}
-              </div>
+          )}
+        </div>
             </div>
             
             <Button
